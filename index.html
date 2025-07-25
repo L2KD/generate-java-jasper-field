@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Jasper Field & Java Class Generator</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      margin: 20px;
+      background: #f4f6f8;
+      color: #333;
+    }
+    h2 {
+      color: #007acc;
+    }
+    textarea, input {
+      width: 100%;
+      padding: 10px;
+      margin: 5px 0 15px;
+      font-family: monospace;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    label {
+      font-weight: bold;
+    }
+    .btn-group {
+      margin-bottom: 20px;
+    }
+    button {
+      padding: 10px 20px;
+      margin-right: 10px;
+      background-color: #007acc;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    button:hover {
+      background-color: #005f99;
+    }
+    .result {
+      background: #fff;
+      border: 1px solid #ccc;
+      padding: 10px;
+      height: 200px;
+      overflow: auto;
+      white-space: pre;
+    }
+  </style>
+</head>
+<body>
+  <h2>Jasper Class & Field Generator</h2>
+
+  <label for="jsonInput">JSON gốc:</label>
+  <textarea id="jsonInput" rows="10" placeholder='Dán JSON vào đây...'></textarea>
+
+  <label for="className">Tên class:</label>
+  <input type="text" id="className" placeholder="Ví dụ: BenhAnTaiMuiHongData">
+
+  <label for="xmlRoot">XML root name:</label>
+  <input type="text" id="xmlRoot" placeholder="Ví dụ: BENH_AN_TAI_MUI_HONG">
+
+  <div class="btn-group">
+    <button onclick="generateClass()">Xử lý Class</button>
+    <button onclick="generateJasperField()">Xử lý Jasper Field</button>
+  </div>
+
+  <label for="classOutput">Kết quả Class:</label>
+  <div class="result" id="classOutput"></div>
+
+  <label for="fieldOutput">Kết quả Jasper Field:</label>
+  <div class="result" id="fieldOutput"></div>
+
+  <script>
+    let lastParsedFields = {};
+
+    function flattenJsonLevel2(json) {
+      const flat = {};
+      for (const level1Key in json) {
+        const nested = json[level1Key];
+        if (typeof nested === 'object' && nested !== null) {
+          for (const key in nested) {
+            const value = nested[key];
+            if (typeof value === 'string' || value === null) {
+              flat[key] = 'String';
+              flat[key + 'Name'] = 'String';
+            } else if (typeof value === 'number') {
+              flat[key] = 'Integer';
+              flat[key + 'Name'] = 'String';
+            } else if (Array.isArray(value)) {
+              if (value.every(v => typeof v === 'string')) {
+                flat[key] = 'List<String>';
+                flat[key + 'Name'] = 'String';
+              }
+            }
+          }
+        }
+      }
+      return flat;
+    }
+
+    function generateClass() {
+      const jsonText = document.getElementById('jsonInput').value.trim();
+      const className = document.getElementById('className').value.trim() || 'GeneratedClass';
+      const xmlRoot = document.getElementById('xmlRoot').value.trim() || 'ROOT';
+
+      let json;
+      try {
+        json = JSON.parse(jsonText);
+      } catch (e) {
+        alert('JSON không hợp lệ');
+        return;
+      }
+
+      const flatFields = flattenJsonLevel2(json);
+      lastParsedFields = flatFields;
+
+      let fieldsStr = '';
+      for (const [key, type] of Object.entries(flatFields)) {
+        fieldsStr += `    private ${type} ${key};\n`;
+      }
+
+      const classStr = `@AllArgsConstructor
+@NoArgsConstructor
+@Data
+@Builder
+@XmlRootElement(name = "${xmlRoot}")
+@JsonIgnoreProperties(ignoreUnknown = true)
+@XmlAccessorType(XmlAccessType.FIELD)
+public class ${className} implements Serializable {
+${fieldsStr}}`;
+
+      document.getElementById('classOutput').textContent = classStr;
+    }
+
+    function generateJasperField() {
+      if (Object.keys(lastParsedFields).length === 0) {
+        generateClass(); // auto-generate if not done yet
+      }
+
+      const fields = Object.entries(lastParsedFields).map(([key, type]) => {
+        const cleanName = key.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+        const classType = (type === 'Integer') ? 'java.lang.Integer' :
+                          (type === 'String') ? 'java.lang.String' :
+                          (type.startsWith('List')) ? 'java.util.List' : type;
+        return `<field name="${cleanName}" class="${classType}"/>`;
+      });
+
+      document.getElementById('fieldOutput').textContent = fields.join('\n');
+    }
+  </script>
+</body>
+</html>
