@@ -2,75 +2,366 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Jasper Field & Java Class Generator</title>
   <style>
+    * {
+      box-sizing: border-box;
+    }
+
     body {
-      font-family: Arial, sans-serif;
-      margin: 20px;
-      background: #f4f6f8;
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      margin: 0;
+      padding: 20px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
       color: #333;
+      line-height: 1.6;
     }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 20px;
+      padding: 40px;
+      box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+      backdrop-filter: blur(10px);
+    }
+
     h2 {
-      color: #007acc;
+      color: #4a5568;
+      text-align: center;
+      margin-bottom: 40px;
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
     }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-bottom: 30px;
+    }
+
+    .form-group {
+      display: flex;
+      flex-direction: column;
+    }
+
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+
+    label {
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: #4a5568;
+      font-size: 0.95rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
     textarea, input {
       width: 100%;
-      padding: 10px;
-      margin: 5px 0 15px;
-      font-family: monospace;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+      padding: 15px;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      font-size: 14px;
+      transition: all 0.3s ease;
+      background: #f8fafc;
+      resize: vertical;
     }
-    label {
-      font-weight: bold;
+
+    textarea:focus, input:focus {
+      outline: none;
+      border-color: #667eea;
+      background: #fff;
+      box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+      transform: translateY(-2px);
     }
+
+    textarea {
+      min-height: 200px;
+      font-size: 13px;
+    }
+
     .btn-group {
-      margin-bottom: 20px;
+      display: flex;
+      gap: 15px;
+      justify-content: center;
+      margin: 40px 0;
+      flex-wrap: wrap;
     }
+
     button {
-      padding: 10px 20px;
-      margin-right: 10px;
-      background-color: #007acc;
+      padding: 15px 30px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
       color: white;
       border: none;
-      border-radius: 4px;
+      border-radius: 50px;
       cursor: pointer;
+      font-weight: 600;
+      font-size: 1rem;
+      transition: all 0.3s ease;
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+      position: relative;
+      overflow: hidden;
     }
+
+    button::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: -100%;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.2), transparent);
+      transition: left 0.5s;
+    }
+
+    button:hover::before {
+      left: 100%;
+    }
+
     button:hover {
-      background-color: #005f99;
+      transform: translateY(-3px);
+      box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
     }
+
+    button:active {
+      transform: translateY(-1px);
+    }
+
+    .result-section {
+      display: flex;
+      flex-direction: column;
+      position: relative;
+    }
+
+    .copy-btn {
+      position: absolute;
+      top: 35px;
+      right: 15px;
+      padding: 8px 16px;
+      font-size: 12px;
+      background: rgba(102, 126, 234, 0.9);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      z-index: 10;
+      font-weight: 600;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    }
+
+    .copy-btn:hover {
+      background: rgba(102, 126, 234, 1);
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+    }
+
+    .copy-btn:active {
+      transform: translateY(0);
+    }
+
+    .copy-btn.success {
+      background: #48bb78 !important;
+      animation: successPulse 0.3s ease;
+    }
+
+    @keyframes successPulse {
+      0% { transform: scale(1); }
+      50% { transform: scale(1.1); }
+      100% { transform: scale(1); }
+    }
+
+    .results-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 30px;
+      margin-top: 40px;
+    }
+
     .result {
-      background: #fff;
-      border: 1px solid #ccc;
-      padding: 10px;
-      height: 200px;
+      background: #1a202c;
+      border: none;
+      border-radius: 12px;
+      padding: 20px;
+      min-height: 300px;
       overflow: auto;
       white-space: pre;
+      font-family: 'Fira Code', 'Courier New', monospace;
+      font-size: 13px;
+      color: #e2e8f0;
+      box-shadow: inset 0 2px 10px rgba(0, 0, 0, 0.3);
+      position: relative;
+    }
+
+    .result::-webkit-scrollbar {
+      width: 8px;
+    }
+
+    .result::-webkit-scrollbar-track {
+      background: #2d3748;
+      border-radius: 4px;
+    }
+
+    .result::-webkit-scrollbar-thumb {
+      background: #4a5568;
+      border-radius: 4px;
+    }
+
+    .result::-webkit-scrollbar-thumb:hover {
+      background: #667eea;
+    }
+
+    .status-indicator {
+      display: inline-block;
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #48bb78;
+      margin-left: 8px;
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0% { opacity: 1; }
+      50% { opacity: 0.5; }
+      100% { opacity: 1; }
+    }
+
+    .placeholder-text {
+      color: #a0aec0;
+      font-style: italic;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 768px) {
+      .container {
+        padding: 20px;
+        margin: 10px;
+      }
+
+      .form-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      .results-grid {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+
+      h2 {
+        font-size: 2rem;
+      }
+
+      .btn-group {
+        flex-direction: column;
+        align-items: center;
+      }
+
+      button {
+        width: 100%;
+        max-width: 300px;
+      }
+    }
+
+    /* Loading animation */
+    .loading {
+      display: inline-block;
+      width: 20px;
+      height: 20px;
+      border: 3px solid rgba(255, 255, 255, 0.3);
+      border-radius: 50%;
+      border-top-color: #fff;
+      animation: spin 1s ease-in-out infinite;
+      margin-left: 10px;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    @keyframes slideIn {
+      from {
+        transform: translateX(100%);
+        opacity: 0;
+      }
+      to {
+        transform: translateX(0);
+        opacity: 1;
+      }
+    }
+
+    @keyframes slideOut {
+      from {
+        transform: translateX(0);
+        opacity: 1;
+      }
+      to {
+        transform: translateX(100%);
+        opacity: 0;
+      }
     }
   </style>
 </head>
 <body>
-  <h2>Jasper Class & Field Generator</h2>
+  <div class="container">
+    <h2>Jasper Class & Field Generator</h2>
 
-  <label for="jsonInput">JSON gốc:</label>
-  <textarea id="jsonInput" rows="10" placeholder='Dán JSON vào đây...'></textarea>
+    <div class="form-grid">
+      <div class="form-group full-width">
+        <label for="jsonInput">JSON gốc <span class="status-indicator"></span></label>
+        <textarea id="jsonInput" placeholder='Dán JSON vào đây để bắt đầu...'></textarea>
+      </div>
 
-  <label for="className">Tên class:</label>
-  <input type="text" id="className" placeholder="Ví dụ: BenhAnTaiMuiHongData">
+      <div class="form-group">
+        <label for="className">Tên class</label>
+        <input type="text" id="className" placeholder="Ví dụ: BenhAnTaiMuiHongData">
+      </div>
 
-  <label for="xmlRoot">XML root name:</label>
-  <input type="text" id="xmlRoot" placeholder="Ví dụ: BENH_AN_TAI_MUI_HONG">
+      <div class="form-group">
+        <label for="xmlRoot">XML root name</label>
+        <input type="text" id="xmlRoot" placeholder="Ví dụ: BENH_AN_TAI_MUI_HONG">
+      </div>
+    </div>
 
-  <div class="btn-group">
-    <button onclick="generateClass()">Xử lý Class</button>
-    <button onclick="generateJasperField()">Xử lý Jasper Field</button>
+    <div class="btn-group">
+      <button onclick="generateClass()">
+        <span>🏗️ Xử lý Class</span>
+      </button>
+      <button onclick="generateJasperField()">
+        <span>⚡ Xử lý Jasper Field</span>
+      </button>
+    </div>
+
+    <div class="results-grid">
+      <div class="result-section">
+        <label>Kết quả Class:</label>
+        <button class="copy-btn" onclick="copyToClipboard('classOutput')">📋 Copy</button>
+        <div class="result" id="classOutput">
+          <span class="placeholder-text">Kết quả class sẽ hiển thị ở đây...</span>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <label>Kết quả Jasper Field:</label>
+        <button class="copy-btn" onclick="copyToClipboard('fieldOutput')">📋 Copy</button>
+        <div class="result" id="fieldOutput">
+          <span class="placeholder-text">Kết quả jasper field sẽ hiển thị ở đây...</span>
+        </div>
+      </div>
+    </div>
   </div>
-
-  <label for="classOutput">Kết quả Class:</label>
-  <div class="result" id="classOutput"></div>
-
-  <label for="fieldOutput">Kết quả Jasper Field:</label>
-  <div class="result" id="fieldOutput"></div>
 
   <script>
     let lastParsedFields = {};
@@ -100,7 +391,21 @@
       return flat;
     }
 
+    function showLoading(buttonElement) {
+      const originalText = buttonElement.innerHTML;
+      buttonElement.innerHTML = originalText + '<span class="loading"></span>';
+      buttonElement.disabled = true;
+      
+      setTimeout(() => {
+        buttonElement.innerHTML = originalText;
+        buttonElement.disabled = false;
+      }, 1000);
+    }
+
     function generateClass() {
+      const button = event.target;
+      showLoading(button);
+      
       const jsonText = document.getElementById('jsonInput').value.trim();
       const className = document.getElementById('className').value.trim() || 'GeneratedClass';
       const xmlRoot = document.getElementById('xmlRoot').value.trim() || 'ROOT';
@@ -109,7 +414,7 @@
       try {
         json = JSON.parse(jsonText);
       } catch (e) {
-        alert('JSON không hợp lệ');
+        alert('❌ JSON không hợp lệ! Vui lòng kiểm tra lại.');
         return;
       }
 
@@ -135,6 +440,9 @@ ${fieldsStr}}`;
     }
 
     function generateJasperField() {
+      const button = event.target;
+      showLoading(button);
+      
       if (Object.keys(lastParsedFields).length === 0) {
         generateClass(); // auto-generate if not done yet
       }
@@ -149,6 +457,96 @@ ${fieldsStr}}`;
 
       document.getElementById('fieldOutput').textContent = fields.join('\n');
     }
+
+    function copyToClipboard(elementId) {
+      const element = document.getElementById(elementId);
+      const text = element.textContent;
+      
+      if (text && !text.includes('sẽ hiển thị ở đây')) {
+        navigator.clipboard.writeText(text).then(() => {
+          const button = event.target;
+          const originalText = button.innerHTML;
+          
+          // Success feedback
+          button.innerHTML = '✅ Đã copy!';
+          button.classList.add('success');
+          
+          // Show notification
+          showNotification('Đã copy vào clipboard!', 'success');
+          
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('success');
+          }, 2000);
+        }).catch(() => {
+          // Fallback for older browsers
+          const textArea = document.createElement('textarea');
+          textArea.value = text;
+          document.body.appendChild(textArea);
+          textArea.select();
+          document.execCommand('copy');
+          document.body.removeChild(textArea);
+          
+          const button = event.target;
+          const originalText = button.innerHTML;
+          button.innerHTML = '✅ Đã copy!';
+          button.classList.add('success');
+          
+          showNotification('Đã copy vào clipboard!', 'success');
+          
+          setTimeout(() => {
+            button.innerHTML = originalText;
+            button.classList.remove('success');
+          }, 2000);
+        });
+      } else {
+        showNotification('Chưa có dữ liệu để copy!', 'warning');
+      }
+    }
+
+    function showNotification(message, type = 'info') {
+      // Remove existing notification
+      const existingNotification = document.querySelector('.notification');
+      if (existingNotification) {
+        existingNotification.remove();
+      }
+      
+      // Create notification
+      const notification = document.createElement('div');
+      notification.className = `notification ${type}`;
+      notification.textContent = message;
+      
+      // Add notification styles
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        padding: 12px 20px;
+        border-radius: 8px;
+        color: white;
+        font-weight: 600;
+        z-index: 1000;
+        animation: slideIn 0.3s ease;
+        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+        ${type === 'success' ? 'background: #48bb78;' : ''}
+        ${type === 'warning' ? 'background: #ed8936;' : ''}
+        ${type === 'info' ? 'background: #667eea;' : ''}
+      `;
+      
+      document.body.appendChild(notification);
+      
+      // Auto remove after 3 seconds
+      setTimeout(() => {
+        notification.style.animation = 'slideOut 0.3s ease';
+        setTimeout(() => notification.remove(), 300);
+      }, 3000);
+    }
+
+    // Auto-resize textarea
+    document.getElementById('jsonInput').addEventListener('input', function() {
+      this.style.height = 'auto';
+      this.style.height = Math.max(200, this.scrollHeight) + 'px';
+    });
   </script>
 </body>
 </html>
