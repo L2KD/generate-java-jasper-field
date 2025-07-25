@@ -20,7 +20,7 @@
     }
 
     .container {
-      max-width: 1200px;
+      /* max-width: 1200px; */
       margin: 0 auto;
       background: rgba(255, 255, 255, 0.95);
       border-radius: 20px;
@@ -342,6 +342,9 @@
       <button onclick="generateJasperField()">
         <span>⚡ Xử lý Jasper Field</span>
       </button>
+      <button onclick="generateSampleXml()">
+        <span>📄 Xử lý XML</span>
+      </button>
     </div>
 
     <div class="results-grid">
@@ -358,6 +361,14 @@
         <button class="copy-btn" onclick="copyToClipboard('fieldOutput')">📋 Copy</button>
         <div class="result" id="fieldOutput">
           <span class="placeholder-text">Kết quả jasper field sẽ hiển thị ở đây...</span>
+        </div>
+      </div>
+
+      <div class="result-section">
+        <label>Kết quả XML:</label>
+        <button class="copy-btn" onclick="copyToClipboard('xmlOutput')">📋 Copy</button>
+        <div class="result" id="xmlOutput">
+          <span class="placeholder-text">Kết quả XML sẽ hiển thị ở đây...</span>
         </div>
       </div>
     </div>
@@ -437,6 +448,7 @@ public class ${className} implements Serializable {
 ${fieldsStr}}`;
 
       document.getElementById('classOutput').textContent = classStr;
+      showNotification('Đã tạo class thành công!', 'success');
     }
 
     function generateJasperField() {
@@ -456,6 +468,7 @@ ${fieldsStr}}`;
       });
 
       document.getElementById('fieldOutput').textContent = fields.join('\n');
+      showNotification('Đã tạo Jasper field thành công!', 'success');
     }
 
     function copyToClipboard(elementId) {
@@ -472,7 +485,7 @@ ${fieldsStr}}`;
           button.classList.add('success');
           
           // Show notification
-          showNotification('Đã copy vào clipboard!', 'success');
+          showNotification(`Đã copy vào clipboard! (${elementId === 'classOutput' ? 'Class' : elementId === 'fieldOutput' ? 'Jasper Field' : 'XML'})`, 'success');
           
           setTimeout(() => {
             button.innerHTML = originalText;
@@ -540,6 +553,60 @@ ${fieldsStr}}`;
         notification.style.animation = 'slideOut 0.3s ease';
         setTimeout(() => notification.remove(), 300);
       }, 3000);
+    }
+
+    function generateSampleXml() {
+      const className = document.getElementById('className').value.trim();
+      const xmlRoot = document.getElementById('xmlRoot').value.trim() || 'ROOT';
+      const jsonInput = document.getElementById('jsonInput').value.trim();
+      
+      if (!jsonInput) {
+        showNotification('Vui lòng nhập JSON đầu vào', 'error');
+        return;
+      }
+
+      try {
+        const jsonData = JSON.parse(jsonInput);
+        const flattened = flattenJsonLevel2(jsonData);
+        
+        let xml = `<?xml version="1.0" encoding="UTF-8"?>\n<${xmlRoot}>\n`;
+        
+        // Sample data generators
+        const sampleData = {
+          'String': () => {
+            const samples = ['Sample', 'Test', 'Demo', 'Example', 'Data'];
+            return samples[Math.floor(Math.random() * samples.length)] + ' ' + 
+                   (Math.floor(Math.random() * 100) + 1);
+          },
+          'Integer': () => Math.floor(Math.random() * 1000) + 1,
+          'Double': () => (Math.random() * 1000).toFixed(2),
+          'Boolean': () => Math.random() > 0.5 ? 'true' : 'false',
+          'Date': () => new Date().toISOString().split('T')[0],
+          'List<String>': null
+        };
+
+        for (const [key, type] of Object.entries(flattened)) {
+          if (type === 'List<String>') continue; // Skip lists in XML
+          
+          const tagName = key.toUpperCase();
+          const dataType = type.replace(/\[\]$/, ''); // Remove array brackets if any
+          const generator = sampleData[dataType] || sampleData['String'];
+          
+          if (generator) {
+            const value = generator();
+            xml += `  <${tagName}>${value}</${tagName}>\n`;
+          }
+        }
+        
+        xml += `</${xmlRoot}>`;
+        
+        document.getElementById('xmlOutput').innerHTML = '';
+        document.getElementById('xmlOutput').textContent = xml;
+        showNotification('Đã tạo XML mẫu thành công!', 'success');
+      } catch (error) {
+        console.error('Lỗi khi tạo XML mẫu:', error);
+        showNotification('Lỗi khi xử lý dữ liệu: ' + error.message, 'error');
+      }
     }
 
     // Auto-resize textarea
