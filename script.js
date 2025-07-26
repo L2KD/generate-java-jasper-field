@@ -26,6 +26,7 @@ function flattenJsonLevel2(json) {
 }
 
 function showLoading(buttonElement) {
+    if (!buttonElement) return;
     const originalText = buttonElement.innerHTML;
     buttonElement.innerHTML = originalText + '<span class="loading"></span>';
     buttonElement.disabled = true;
@@ -35,9 +36,20 @@ function showLoading(buttonElement) {
     }, 1000);
 }
 
-function generateClass() {
-    const button = event.target;
+function handleProcess() {
+    const button = document.querySelector('.btn-group button');
     showLoading(button);
+    // Xử lý dữ liệu
+    generateClass(false); // Không show loading riêng lẻ
+    generateJasperField(false);
+    generateSampleXml(false);
+}
+
+function generateClass(showLoadingFlag = true) {
+    if (showLoadingFlag) {
+        const button = document.querySelector('.btn-group button');
+        showLoading(button);
+    }
     const direction = document.querySelector('input[name="direction"]:checked').value;
     const inputText = document.getElementById('jsonInput').value.trim();
     const className = document.getElementById('className').value.trim() || 'GeneratedClass';
@@ -47,7 +59,8 @@ function generateClass() {
         try {
             json = JSON.parse(inputText);
         } catch (e) {
-            alert('❌ JSON không hợp lệ! Vui lòng kiểm tra lại.');
+            // alert('❌ JSON không hợp lệ! Vui lòng kiểm tra lại.');
+            showNotification('JSON không hợp lệ! Vui lòng kiểm tra lại', 'error');
             return;
         }
         const flatFields = flattenJsonLevel2(json);
@@ -74,16 +87,18 @@ function generateClass() {
         for (const key in flatFields) {
             jsonExample[key] = flatFields[key].startsWith('List') ? [] : '';
         }
-        document.getElementById('classOutput').textContent = JSON.stringify({[className]: jsonExample}, null, 2);
+        document.getElementById('classOutput').textContent = JSON.stringify({ [className]: jsonExample }, null, 2);
         showNotification('Đã phân tích class thành JSON!', 'success');
     }
 }
 
-function generateJasperField() {
-    const button = event.target;
-    showLoading(button);
+function generateJasperField(showLoadingFlag = true) {
+    if (showLoadingFlag) {
+        const button = document.querySelector('.btn-group button');
+        showLoading(button);
+    }
     if (Object.keys(lastParsedFields).length === 0) {
-        generateClass();
+        generateClass(false);
     }
     const fields = Object.entries(lastParsedFields).map(([key, type]) => {
         const cleanName = key.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
@@ -154,6 +169,7 @@ function showNotification(message, type = 'info') {
     ${type === 'success' ? 'background: #48bb78;' : ''}
     ${type === 'warning' ? 'background: #ed8936;' : ''}
     ${type === 'info' ? 'background: #667eea;' : ''}
+    ${type === 'error' ? 'background: #ff374b;' : ''}
   `;
     document.body.appendChild(notification);
     setTimeout(() => {
@@ -162,14 +178,22 @@ function showNotification(message, type = 'info') {
     }, 3000);
 }
 
-function generateSampleXml() {
+function generateSampleXml(showLoadingFlag = true) {
+    if (showLoadingFlag) {
+        const button = document.querySelector('.btn-group button');
+        showLoading(button);
+    }
     const className = document.getElementById('className').value.trim();
     const xmlRoot = document.getElementById('xmlRoot').value.trim() || 'ROOT';
-    const jsonInput = document.getElementById('classOutput').innerText.trim();
+    let jsonInput = document.getElementById('jsonInput').value.trim();
+    const direction = document.querySelector('input[name="direction"]:checked').value;
+    if (direction === 'classToJson') {
+        // Lấy JSON từ classOutput nếu đang ở chiều classToJson
+        jsonInput = document.getElementById('classOutput').textContent.trim();
+    }
     if (!jsonInput || jsonInput.includes('sẽ hiển thị ở đây')) {
-        // showNotification('Vui lòng nhập JSON đầu vào', 'error');
-        generateClass();
-        // return;
+        showNotification('Vui lòng nhập JSON đầu vào', 'error');
+        return;
     }
     try {
         const jsonData = JSON.parse(jsonInput);
@@ -211,4 +235,3 @@ document.getElementById('jsonInput').addEventListener('input', function () {
     this.style.height = 'auto';
     this.style.height = Math.max(200, this.scrollHeight) + 'px';
 });
-
