@@ -69,7 +69,8 @@ function generateClass(showLoadingFlag = true) {
         for (const [key, type] of Object.entries(flatFields)) {
             fieldsStr += `    private ${type} ${key};\n`;
         }
-        const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@Builder\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} implements Serializable {\n${fieldsStr}}`;
+        // const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@Builder\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} implements Serializable {\n${fieldsStr}}`;
+        const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@SuperBuilder\n@EqualsAndHashCode(callSuper = true)\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} implements Serializable {\n${fieldsStr}}`;
         document.getElementById('classOutput').textContent = classStr;
         showNotification('Đã tạo class thành công!', 'success');
     } else if (direction === 'classToJson') {
