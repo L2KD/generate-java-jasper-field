@@ -8,11 +8,15 @@ function flattenJsonLevel2(json) {
             for (const key in nested) {
                 const value = nested[key];
                 if (typeof value === 'string' || value === null) {
-                    flat[key] = 'String';
-                    flat[key + 'Name'] = 'String';
+                    if (value && isValidDate(value)) {
+                        flat[key] = 'ZonedDateTime';
+                    } else {
+                        flat[key] = 'String';
+                        // flat[key + 'Name'] = 'String';
+                    }
                 } else if (typeof value === 'number') {
                     flat[key] = 'Integer';
-                    flat[key + 'Name'] = 'String';
+                    // flat[key + 'Name'] = 'String';
                 } else if (Array.isArray(value)) {
                     if (value.every(v => typeof v === 'string')) {
                         flat[key] = 'List<String>';
@@ -24,6 +28,12 @@ function flattenJsonLevel2(json) {
     }
     return flat;
 }
+function isValidDate(dateString) {
+    if (!dateString) return false;
+    if (!dateString.includes('-')) return false;
+    const dateObject = new Date(dateString);
+    return !isNaN(dateObject.valueOf());
+  }
 
 function showLoading(buttonElement) {
     if (!buttonElement) return;
@@ -70,7 +80,7 @@ function generateClass(showLoadingFlag = true) {
             fieldsStr += `    private ${type} ${key};\n`;
         }
         // const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@Builder\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} implements Serializable {\n${fieldsStr}}`;
-        const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@SuperBuilder\n@EqualsAndHashCode(callSuper = true)\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} implements Serializable {\n${fieldsStr}}`;
+        const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@SuperBuilder\n@EqualsAndHashCode(callSuper = true)\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} extends BaseBenhAnData implements Serializable {\n${fieldsStr}}`;
         document.getElementById('classOutput').textContent = classStr;
         showNotification('Đã tạo class thành công!', 'success');
     } else if (direction === 'classToJson') {
@@ -104,7 +114,7 @@ function generateJasperField(showLoadingFlag = true) {
     const fields = Object.entries(lastParsedFields).map(([key, type]) => {
         const cleanName = key.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
         const classType = (type === 'Integer') ? 'java.lang.Integer' :
-            (type === 'String') ? 'java.lang.String' :
+            (type === 'String' || type === 'ZonedDateTime') ? 'java.lang.String' :
                 (type.startsWith('List')) ? 'java.util.List' : type;
         return `<field name="${cleanName}" class="${classType}"/>`;
     });
