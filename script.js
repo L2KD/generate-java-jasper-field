@@ -122,12 +122,13 @@ function generateJasperField(showLoadingFlag = true) {
     showNotification('Đã tạo Jasper field thành công!', 'success');
 }
 
-function copyToClipboard(elementId) {
+function copyToClipboard(elementId, buttonId) {
     const element = document.getElementById(elementId);
+    const button = document.getElementById(buttonId);
     const text = element.textContent;
     if (text && !text.includes('sẽ hiển thị ở đây')) {
         navigator.clipboard.writeText(text).then(() => {
-            const button = event.target;
+            // const button = event.target;
             const originalText = button.innerHTML;
             button.innerHTML = '✅ Đã copy!';
             button.classList.add('success');
@@ -136,7 +137,8 @@ function copyToClipboard(elementId) {
                 button.innerHTML = originalText;
                 button.classList.remove('success');
             }, 2000);
-        }).catch(() => {
+        }).catch((err) => {
+            console.log(err);
             const textArea = document.createElement('textarea');
             textArea.value = text;
             document.body.appendChild(textArea);

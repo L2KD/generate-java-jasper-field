@@ -40,7 +40,7 @@
     <div class="results-grid">
       <div class="result-section">
         <label>Kết quả Class:</label>
-        <button class="copy-btn" onclick="copyToClipboard('classOutput')">📋 Copy</button>
+        <button class="copy-btn" onclick="copyToClipboard('classOutput', 'btnClass')" id="btnClass">📋 Copy</button>
         <div class="result" id="classOutput">
           <span class="placeholder-text">Kết quả class sẽ hiển thị ở đây...</span>
         </div>
@@ -48,7 +48,7 @@
 
       <div class="result-section">
         <label>Kết quả Jasper Field:</label>
-        <button class="copy-btn" onclick="copyToClipboard('fieldOutput')">📋 Copy</button>
+        <button class="copy-btn" onclick="copyToClipboard('fieldOutput', 'btnCopyField')" id="btnCopyField">📋 Copy</button>
         <div class="result" id="fieldOutput">
           <span class="placeholder-text">Kết quả jasper field sẽ hiển thị ở đây...</span>
         </div>
@@ -56,7 +56,7 @@
 
       <div class="result-section">
         <label>Kết quả XML:</label>
-        <button class="copy-btn" onclick="copyToClipboard('xmlOutput')">📋 Copy</button>
+        <button class="copy-btn" onclick="copyToClipboard('xmlOutput', 'btnCopyXml')" id="btnCopyXml">📋 Copy</button>
         <div class="result" id="xmlOutput">
           <span class="placeholder-text">Kết quả XML sẽ hiển thị ở đây...</span>
         </div>
