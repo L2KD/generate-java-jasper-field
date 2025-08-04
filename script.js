@@ -1,30 +1,37 @@
 let lastParsedFields = {};
 
 function flattenJsonLevel2(json) {
+    const shortName = document.getElementById('shortName').value.trim() || 'BA';
     const flat = {};
+    let index = 1;
     for (const level1Key in json) {
         const nested = json[level1Key];
         if (typeof nested === 'object' && nested !== null) {
             for (const key in nested) {
                 const value = nested[key];
+                let keyWithIndex = `${key}${shortName}${index}`;
+                // if (isSplit) {
+                //     keyWithIndex = `${key}-${shortName}${index}`;
+                // }
                 if (typeof value === 'string' || value === null) {
                     if (value && isValidDate(value)) {
-                        flat[key] = 'ZonedDateTime';
+                        flat[keyWithIndex] = 'ZonedDateTime';
                     } else {
-                        flat[key] = 'String';
+                        flat[keyWithIndex] = 'String';
                         // flat[key + 'Name'] = 'String';
                     }
                 } else if (typeof value === 'number') {
-                    flat[key] = 'Integer';
+                    flat[keyWithIndex] = 'Integer';
                     // flat[key + 'Name'] = 'String';
                 } else if (Array.isArray(value)) {
                     if (value.every(v => typeof v === 'string')) {
-                        flat[key] = 'List<String>';
-                        flat[key + 'Name'] = 'String';
+                        flat[keyWithIndex] = 'List<String>';
+                        flat[keyWithIndex + 'Name'] = 'String';
                     }
                 }
             }
         }
+        index++;
     }
     return flat;
 }
@@ -55,7 +62,7 @@ function handleProcess() {
     generateSampleXml(false);
 }
 
-function generateClass(showLoadingFlag = true) {
+function generateClass(showLoadingFlag = true, i) {
     if (showLoadingFlag) {
         const button = document.querySelector('.btn-group button');
         showLoading(button);
@@ -73,11 +80,15 @@ function generateClass(showLoadingFlag = true) {
             showNotification('JSON không hợp lệ! Vui lòng kiểm tra lại', 'error');
             return;
         }
-        const flatFields = flattenJsonLevel2(json);
+        const flatFields = flattenJsonLevel2(json, true);
         lastParsedFields = flatFields;
         let fieldsStr = '';
         for (const [key, type] of Object.entries(flatFields)) {
-            fieldsStr += `    private ${type} ${key};\n`;
+            // const keyList = key.split('-');
+            // const baseKey = `${keyList[0]}`;
+            // const extendKey = `${keyList[1]}`;
+            // fieldsStr += `    @JacksonXmlProperty(localName = "${baseKey.toUpperCase()}${extendKey.toUpperCase()}")\n`;
+            fieldsStr += `    private ${type} ${key.replaceAll("-", "")};\n`;
         }
         // const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@Builder\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} implements Serializable {\n${fieldsStr}}`;
         const classStr = `@AllArgsConstructor\n@NoArgsConstructor\n@Data\n@SuperBuilder\n@EqualsAndHashCode(callSuper = true)\n@XmlRootElement(name = "${xmlRoot}")\n@JsonIgnoreProperties(ignoreUnknown = true)\n@XmlAccessorType(XmlAccessType.FIELD)\npublic class ${className} extends BaseBenhAnData implements Serializable {\n${fieldsStr}}`;
@@ -112,7 +123,7 @@ function generateJasperField(showLoadingFlag = true) {
         generateClass(false);
     }
     const fields = Object.entries(lastParsedFields).map(([key, type]) => {
-        const cleanName = key.toUpperCase().replace(/[^A-Z0-9_]/g, '_');
+        const cleanName = key.replaceAll('-', '').toUpperCase().replace(/[^A-Z0-9_]/g, '_');
         const classType = (type === 'Integer') ? 'java.lang.Integer' :
             (type === 'String' || type === 'ZonedDateTime') ? 'java.lang.String' :
                 (type.startsWith('List')) ? 'java.util.List' : type;
