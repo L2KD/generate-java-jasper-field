@@ -125,6 +125,7 @@ function generateJasperField(showLoadingFlag = true) {
     const fields = Object.entries(lastParsedFields).map(([key, type]) => {
         const cleanName = key.replaceAll('-', '').toUpperCase().replace(/[^A-Z0-9_]/g, '_');
         const classType = (type === 'Integer') ? 'java.lang.Integer' :
+            (type === 'Long') ? 'java.lang.Long' :
             (type === 'String' || type === 'ZonedDateTime') ? 'java.lang.String' :
                 (type.startsWith('List')) ? 'java.util.List' : type;
         return `<field name="${cleanName}" class="${classType}"/>`;
